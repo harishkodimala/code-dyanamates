@@ -196,6 +196,18 @@
     </div>
     
     <script>
+        // Access the camera
+        function initializeCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    document.getElementById("camera").srcObject = stream;
+                })
+                .catch(error => {
+                    console.error("Error accessing webcam: ", error);
+                    alert("Failed to access the webcam. Please check your camera settings.");
+                });
+        }
+
         function captureFace() {
             let video = document.getElementById("camera");
             let canvas = document.getElementById("faceCanvas");
@@ -223,23 +235,22 @@
         function generatePaymentQR() {
             let paymentID = document.getElementById("payment").value;
 
+            if (!paymentID) {
+                alert("Please enter a Payment ID to generate the QR code.");
+                return;
+            }
+
             let qr = new QRious({
                 element: document.getElementById("qrcode"),
-                value: `upi://pay?pa=example@upi&pn=EventBooking&mc=1234&tid=${paymentID || "dummyPaymentID"}`,
+                value: `upi://pay?pa=example@upi&pn=EventBooking&mc=1234&tid=${paymentID}`,
                 size: 200
             });
+
             document.getElementById("qrOutput").style.display = "block";
         }
 
-        // Access the camera
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                document.getElementById("camera").srcObject = stream;
-            })
-            .catch(error => {
-                console.error("Error accessing webcam: ", error);
-                alert("Failed to access the webcam. Please check your camera settings.");
-            });
+        // Initialize the camera when the page is loaded
+        window.onload = initializeCamera;
     </script>
 </body>
 </html>
