@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Booking</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            color: #333;
+            font-family: 'Roboto', sans-serif;
+            background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4gLYzTg6CqM2SD7ZakUlDNrw3g6uygTQ-Rw&s') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .container {
+            width: 50%;
+            margin: 40px auto;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        h2 {
+            color: #4e79a7;
+        }
+
+        label {
+            font-size: 14px;
+            color: #ddd;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input, button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4e79a7;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 12px 0;
+            border-radius: 10px;
+        }
+
+        button:hover {
+            background-color: #3b6d8c;
+        }
+
+        .camera-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        video, #capturedFace {
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            box-shadow: 0 0 8px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            display: block;
+            margin: auto;
+        }
+
+        .qr-output {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .qr-output canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .captured-image {
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .captured-image img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Event Booking</div>
+    <div class="container">
+        <h2>Event Registration:</h2>
+        <form id="registrationForm" onsubmit="event.preventDefault(); registerParticipant();">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+
+            <label for="email">Email ID:</label>
+            <input type="email" id="email" required>
+
+            <label for="face">Face Capture:</label>
+            <div class="camera-container">
+                <video id="camera" autoplay playsinline></video>
+                <button type="button" onclick="captureFace()">Capture Face</button>
+            </div>
+            
+            <canvas id="faceCanvas" style="display:none;"></canvas>
+
+            <div class="captured-image" id="capturedImage">
+                <h3>Captured Face:</h3>
+                <img id="capturedFace" src="" alt="Captured Face">
+            </div>
+
+            <label for="payment">Payment ID:</label>
+            <input type="text" id="payment" placeholder="Enter Payment ID" required>
+
+            <button type="submit">Book Event</button>
+        </form>
+
+        <div class="qr-output" id="qrOutput">
+            <h3>Your Booking QR Code:</h3>
+            <canvas id="qrcode"></canvas>
+            <p>Scan this QR Code for your booking details.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Enable camera access
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                document.getElementById("camera").srcObject = stream;
+            })
+            .catch(error => {
+                console.error("Error accessing webcam: ", error);
+                alert("Camera access is required for face capture.");
+            });
+
+        function captureFace() {
+            let video = document.getElementById("camera");
+            let canvas = document.getElementById("faceCanvas");
+            let context = canvas.getContext("2d");
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            let imageData = canvas.toDataURL("image/png");
+            document.getElementById("capturedFace").src = imageData;
+            document.getElementById("capturedImage").style.display = "block";
+            alert("Face captured successfully!");
+        }
+
+        function registerParticipant() {
+            let name = document.getElementById("name").value;
+            let email = document.getElementById("email").value;
+            let payment = document.getElementById("payment").value;
+
+            if (!payment) {
+                alert("Please enter your payment ID to confirm your booking.");
+                return;
+            }
+
+            alert(Booking successful!\nName: ${name}\nPayment ID: ${payment}\nFace Data captured.);
+
+            generatePaymentQR(name, email, payment);
+        }
+
+        function generatePaymentQR(name, email, paymentID) {
+            let qrData = Event Booking\nName: ${name}\nEmail: ${email}\nPayment ID: ${paymentID};
+            
+            new QRious({
+                element: document.getElementById("qrcode"),
+                value: qrData,
+                size: 200
+            });
+
+            document.getElementById("qrOutput").style.display = "block";
+        }
+    </script>
+</body>
+</html>
