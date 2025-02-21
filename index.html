@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Booking</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to bottom, #ff7f50, #ffcc99);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(to right, #ff6347, #ffeb3b);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px auto;
+            padding: 40px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(to right, #ffffe0, #f0f8ff);
+            width: 80%;
+        }
+        .form-section {
+            width: 50%;
+            padding-right: 30px;
+        }
+        .payment-section {
+            width: 50%;
+            padding-left: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h2 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #e91e63;
+            text-align: center;
+        }
+        label {
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 10px;
+            display: block;
+        }
+        input, select, button {
+            display: block;
+            width: 100%;
+            margin: 12px 0;
+            padding: 16px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 2px solid #ff6347;
+            background-color: #f9f9f9;
+            transition: 0.3s ease-in-out;
+        }
+        input:focus, select:focus, button:focus {
+            outline: none;
+            border-color: #ff69b4;
+            box-shadow: 0 0 8px rgba(255, 105, 180, 0.7);
+        }
+        button {
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #ff69b4;
+        }
+        .camera-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        #camera {
+            border-radius: 12px;
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .payment-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #555;
+            font-size: 14px;
+        }
+        .form-footer a {
+            color: #ff6347;
+            text-decoration: none;
+        }
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .qr-output {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .qr-output canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        /* Animated Gradient */
+        @keyframes gradientAnimation {
+            0% {
+                background: linear-gradient(to right, #ff6347, #ffeb3b);
+            }
+            50% {
+                background: linear-gradient(to right, #ff7f50, #ff69b4);
+            }
+            100% {
+                background: linear-gradient(to right, #ff6347, #ffeb3b);
+            }
+        }
+        .header {
+            animation: gradientAnimation 4s infinite alternate;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Event Booking</div>
+    <div class="container">
+        <div class="form-section">
+            <h2>Event Registration</h2>
+            <form id="registrationForm" onsubmit="event.preventDefault(); registerParticipant();">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email ID:</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="payment">Payment ID:</label>
+                    <input type="text" id="payment" name="payment" required placeholder="Enter payment ID">
+                </div>
+                
+                <div class="form-group">
+                    <label for="face">Face Capture:</label>
+                    <div class="camera-container">
+                        <video id="camera" width="300" height="200" autoplay></video>
+                        <button type="button" onclick="captureFace()">Capture Face</button>
+                    </div>
+                    <canvas id="faceCanvas" style="display:none;"></canvas>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit">Book Now</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Payment Image Section -->
+        <div class="payment-section">
+            <h3>Make Payment</h3>
+            <!-- Replace this URL with your actual payment image URL -->
+            <img src="https://via.placeholder.com/250" alt="Payment Image" class="payment-image">
+            <p>Scan the payment QR code or use the link provided for payment.</p>
+            
+            <!-- Display dynamic QR code -->
+            <div class="qr-output" id="qrOutput">
+                <h3>Your Payment QR Code:</h3>
+                <canvas id="qrcode"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-footer">
+        <p>&copy; 2025 Event Booking. All rights reserved.</p>
+        <p>Need help? <a href="#">Contact Us</a></p>
+    </div>
+
+    <script>
+        function captureFace() {
+            let video = document.getElementById("camera");
+            let canvas = document.getElementById("faceCanvas");
+            let context = canvas.getContext("2d");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            alert("Face captured successfully!");
+        }
+        
+        function registerParticipant() {
+            let name = document.getElementById("name").value;
+            let email = document.getElementById("email").value;
+            let payment = document.getElementById("payment").value;
+            let canvas = document.getElementById("faceCanvas");
+            let faceData = canvas.toDataURL("image/png");
+
+            fetch("http://localhost:3000/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, payment, faceData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                generateQRCode(data.bookingId);  // Generate QR code based on booking data
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        }
+
+        function generateQRCode(data) {
+            const qrOutput = document.getElementById("qrOutput");
+            qrOutput.style.display = 'block';  // Show QR section
+
+            const qr = new QRious({
+                element: document.getElementById("qrcode"),
+                value: `Booking ID: ${data}`,  // This can be any dynamic data, e.g., booking ID or payment details
+                size: 250
+            });
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                document.getElementById("camera").srcObject = stream;
+            })
+            .catch(error => {
+                console.error("Error accessing webcam: ", error);
+            });
+    </script>
+</body>
+</html>
